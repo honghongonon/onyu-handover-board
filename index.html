@@ -58,7 +58,7 @@ button:focus-visible{outline:2px solid var(--tc);outline-offset:2px}
 main{padding:10px max(12px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px));max-width:1080px;margin:0 auto;display:grid;gap:10px}
 #hero,#now,#mine{scroll-margin-top:84px}
 [hidden]{display:none!important}
-#mine{grid-area:me}#calbox{grid-area:cal}#now{grid-area:now}#hero{grid-area:hero}#crew{grid-area:crew}#board{grid-area:board}#pics{grid-area:pics}
+#mine{grid-area:me}#calbox{grid-area:cal;touch-action:pan-y}#now{grid-area:now}#hero{grid-area:hero}#crew{grid-area:crew}#board{grid-area:board}#pics{grid-area:pics}
 main{grid-template-areas:"me" "now" "cal" "hero" "crew" "board" "pics"}
 @media(min-width:760px){main{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"me me" "now hero" "cal hero" "crew board" "pics pics";align-items:start}}
 .hero{border-radius:18px;overflow:hidden;background:var(--card);border:1px solid var(--line)}
@@ -348,7 +348,7 @@ function nowBox(){
   const mk=myNow?curS:tk;
   me.innerHTML=`<span class="pill k-${mk}">${myNow?curS:pillTxt(tc)}</span>${html}<span class="go">보기 ›</span>`;
 }
-let shownM=0;
+let shownM=0,swiped=-1e9;
 function render(){
   if(days[sel].m!==viewM||!$('cal').children.length){viewM=days[sel].m;cal()}
   else $('cal').querySelectorAll('.day[data-i]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.i===sel));
@@ -357,10 +357,18 @@ function render(){
 }
 nowBox();render();
 setInterval(()=>{nowBox();board()},30000);
-$('cal').addEventListener('click',e=>{const b=e.target.closest('.day:not(.empty)');if(b){sel=+b.dataset.i;render()}});
+$('cal').addEventListener('click',e=>{if(performance.now()-swiped<400)return;const b=e.target.closest('.day:not(.empty)');if(b){sel=+b.dataset.i;render()}});
 $('hero').addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b){sel=+b.dataset.go;render()}});
-$('prevM').addEventListener('click',()=>{viewM=11;cal();shownM=11;pics(11)});
-$('nextM').addEventListener('click',()=>{viewM=12;cal();shownM=12;pics(12)});
+const MONTHS=[...new Set(days.map(x=>x.m))];
+function goMonth(dir){const i=MONTHS.indexOf(viewM)+dir;if(i<0||i>=MONTHS.length)return false;viewM=MONTHS[i];cal();shownM=viewM;pics(viewM);return true}
+$('prevM').addEventListener('click',()=>goMonth(-1));
+$('nextM').addEventListener('click',()=>goMonth(1));
+/* 달력 좌우 스와이프로 달 넘기기 */
+let sx=0,sy=0;
+const calEl=$('calbox');
+calEl.addEventListener('touchstart',e=>{const p=e.touches[0];sx=p.clientX;sy=p.clientY},{passive:true});
+calEl.addEventListener('touchend',e=>{const p=e.changedTouches[0],dx=p.clientX-sx,dy=p.clientY-sy;
+  if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5){swiped=performance.now();goMonth(dx<0?1:-1)}},{passive:true});
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>pics(+b.dataset.p)));
 $('shotImg').addEventListener('click',()=>$('shot').classList.toggle('zoom'));
 $('mine').addEventListener('click',()=>{const g=+$('mine').dataset.go;if(g>=0){sel=g;render()}});
