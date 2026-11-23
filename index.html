@@ -29,8 +29,11 @@ button:focus-visible{outline:2px solid var(--tc);outline-offset:2px}
 .tog i{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .55s cubic-bezier(.5,1.6,.4,1)}
 .tog.on i{transform:translateX(18px)}
 .logo{font-family:"Fredoka","IBM Plex Sans KR",sans-serif;font-weight:600;font-size:24px;line-height:1;letter-spacing:-.01em}
-.nowbtn{border:1px solid var(--line);background:var(--card);border-radius:999px;height:36px;padding:0 16px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px}
-.nowbtn i{width:8px;height:8px;border-radius:50%;background:var(--e);box-shadow:0 0 0 0 var(--e);animation:ping 1.8s infinite}
+.cd{--c:var(--off);border:1.5px solid var(--c);background:color-mix(in srgb,var(--c) 12%,var(--bg));border-radius:12px;min-height:40px;padding:3px 12px;display:grid;justify-items:end;line-height:1.2;text-align:right}
+.cd .cl{font-size:11px;font-weight:600;color:var(--mute)}
+.cd b{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mstat{display:flex;flex-wrap:wrap;gap:4px 12px;width:100%;font-size:12px;opacity:.85;padding-top:6px;margin-top:2px;border-top:1px solid color-mix(in srgb,var(--bg) 18%,transparent)}
+.mstat b{font-weight:700}
 .cal{padding:10px 10px 8px}
 .calh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}
 .calh h2{margin:0;font-size:17px;letter-spacing:-.02em}
@@ -96,7 +99,7 @@ main{grid-template-areas:"me" "now" "cal" "hero" "crew" "board" "pics"}
 .row .h b{font-size:14px}
 .row .h span{font-size:11px;color:var(--mute)}
 .row.on{background:color-mix(in srgb,var(--c) 10%,transparent);margin:0 -12px;padding:6px 12px;border-radius:0}
-.mebar{display:flex;align-items:center;gap:10px;width:100%;border:0;border-radius:16px;padding:10px 12px;background:var(--ink);color:var(--bg);text-align:left;min-height:52px}
+.mebar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;width:100%;border:0;border-radius:16px;padding:10px 12px;background:var(--ink);color:var(--bg);text-align:left;min-height:52px}
 .mebar>.pill{flex:none;min-width:40px;height:26px;font-size:12px;border-radius:8px}
 .mebar .st{flex:1;display:grid;line-height:1.3}
 .mebar .st b{font-size:16px;letter-spacing:-.02em}
@@ -122,14 +125,14 @@ main{grid-template-areas:"me" "now" "cal" "hero" "crew" "board" "pics"}
 @keyframes tw{50%{opacity:.25}}
 .bob{animation:bob 4s ease-in-out infinite}
 .tw{animation:tw 3s ease-in-out infinite}
-@media(prefers-reduced-motion:reduce){.tog,.tog i{transition:none}.baton,.bob,.tw,.nowbtn i,.fade{animation:none}.baton{display:none}}
+@media(prefers-reduced-motion:reduce){.tog,.tog i{transition:none}.baton,.bob,.tw,.fade{animation:none}.baton{display:none}}
 </style>
 </head>
 <body>
 <header class="top">
   <div class="bar">
     <div class="me"><span class="tog" id="tog" aria-hidden="true"><i></i></span><b class="logo">On Duty</b></div>
-    <button class="nowbtn" id="goNow" type="button"><i></i>지금</button>
+    <button class="cd" id="goNow" type="button" hidden><span class="cl" id="cdL"></span><b id="cdT"></b></button>
   </div>
 </header>
 <main id="main">
@@ -281,25 +284,41 @@ function nowBox(){
     const l=on(i,s);
     box.innerHTML=`<div class="wh"><h2>지금 병동</h2><span class="pill k-${s}">${s}</span><b>${SN[s]}</b><span class="tm">${HRS[s]}</span></div><div class="who">${l.map(p=>chip(p)).join('')}</div>`;
   }else box.hidden=true;
-  /* 나: 지금 근무 중인지, 아니면 오늘 상태와 다음 근무 */
+  /* 나 */
   me.hidden=false;
-  const myNow=i>=0&&cat(days[i].c[ME])===s;
+  const W=['D','E','N'];
+  const st=(j,c)=>{const x=days[j];return new Date(2026,x.m-1,x.d,START[c],0,0)};
+  const dur=ms=>{let m=Math.max(0,Math.ceil(ms/60000));const d=Math.floor(m/1440);m-=d*1440;const hh=Math.floor(m/60),mm=m%60;return d?`${d}일 ${hh}시간 ${mm}분`:hh?`${hh}시간 ${mm}분`:`${mm}분`};
+  let cur=-1,curS='',nxt=-1;
+  for(let j=Math.max(0,ti-1);j<days.length;j++){const c=cat(days[j].c[ME]);if(!W.includes(c))continue;const a=st(j,c),b=new Date(a.getTime()+8*3600000);
+    if(a<=k&&k<b){cur=j;curS=c;continue}
+    if(a>k&&nxt<0){nxt=j;break}}
+  const myNow=cur>=0;
+  const cd=$('goNow');cd.hidden=false;
+  let lab,txt,cc;
+  if(myNow){const b=new Date(st(cur,curS).getTime()+8*3600000);lab='퇴근까지';txt=dur(b-k);cc=curS}
+  else if(nxt>=0){const ns=cat(days[nxt].c[ME]),a=st(nxt,ns),dep=new Date(a.getTime()-3600000);cc=ns;
+    if(k<dep){lab=`${SN[ns]} 출발까지`;txt=dur(dep-k)}else{lab=`${SN[ns]} 시작까지`;txt=dur(a-k)}}
+  else{lab='남은 근무';txt='없음';cc=''}
+  $('cdL').textContent=lab;$('cdT').textContent=txt;cd.style.setProperty('--c',cc?`var(--${cc.toLowerCase()})`:'var(--off)');
+  cd.dataset.go=myNow?cur:nxt>=0?nxt:ti;
+  /* 오늘 상태, 다음 근무, 남은 오프·이달 남은 근무 */
+  const tc=days[ti].c[ME],tk=cat(tc);
   let html,go;
-  if(myNow){
-    html=`<span class="st"><span>나 · 지금</span><b>${SN[s]} 근무 중 · ${END[s]}시까지</b></span>`;go=i;
-  }else{
-    const tc=days[ti].c[ME],tk=cat(tc);
-    const today=['D','E','N'].includes(tk)?`오늘 ${SN[tk]}`:pillTxt(tc)==='원티드'?'오늘 원티드 오프':tk==='OFF'?'오늘 오프':`오늘 ${pillTxt(tc)}`;
-    let j=-1;
-    for(let d=ti;d<days.length&&j<0;d++){const c=cat(days[d].c[ME]);if(['D','E','N'].includes(c)&&(d>ti||START[c]>h))j=d}
-    const nx=j<0?'12월 안에 남은 근무 없음':`다음 근무 ${j===ti?'오늘':short(j)} ${SN[cat(days[j].c[ME])]} ${START[cat(days[j].c[ME])]}시`;
-    html=`<span class="st"><span>나 · ${today}${['D','E','N'].includes(tk)&&j!==ti?' (끝남)':''}</span><b>${nx}</b></span>`;go=j<0?ti:j;
+  if(myNow){html=`<span class="st"><span>나 · 지금</span><b>${SN[curS]} 근무 중 · ${END[curS]}시 퇴근</b></span>`;go=cur}
+  else{
+    const today=W.includes(tk)?`오늘 ${SN[tk]}`:tk==='WOFF'?'오늘 원티드 오프':tk==='OFF'?'오늘 오프':`오늘 ${pillTxt(tc)}`;
+    const nx=nxt<0?'12월 안에 남은 근무 없음':`다음 근무 ${nxt===ti?'오늘':short(nxt)} ${SN[cat(days[nxt].c[ME])]} · ${START[cat(days[nxt].c[ME])]-1}시 출발`;
+    html=`<span class="st"><span>나 · ${today}${W.includes(tk)&&nxt!==ti?' (끝남)':''}</span><b>${nx}</b></span>`;go=nxt<0?ti:nxt;
   }
+  let offRun=0;if(!myNow&&!W.includes(tk))for(let j=ti;j<days.length&&!W.includes(cat(days[j].c[ME]));j++)offRun++;
+  const mm=days[ti].m,rest=days.map((x,j)=>({x,j})).filter(o=>o.x.m===mm&&o.j>ti);
+  const rw=rest.filter(o=>W.includes(cat(o.x.c[ME]))).length,ro=rest.filter(o=>['OFF','WOFF'].includes(cat(o.x.c[ME]))).length;
   me.dataset.go=go;
-  const tg=$('tog');tg.style.setProperty('--c',myNow?`var(--${s.toLowerCase()})`:'var(--off)');
+  const tg=$('tog');tg.style.setProperty('--c',myNow?`var(--${curS.toLowerCase()})`:'var(--off)');
   if(myNow)setTimeout(()=>tg.classList.add('on'),250);else tg.classList.remove('on');
-  const mc=myNow?s:days[ti].c[ME],mk=myNow?s:cat(mc);
-  me.innerHTML=`<span class="pill k-${mk}">${myNow?s:pillTxt(mc)}</span>${html}<span class="go">보기 ›</span>`;
+  const mk=myNow?curS:tk;
+  me.innerHTML=`<span class="pill k-${mk}">${myNow?curS:pillTxt(tc)}</span>${html}<span class="go">보기 ›</span><span class="mstat">${offRun?`<span>이번 오프 <b>${offRun===1?'오늘까지':offRun+'일 남음'}</b></span>`:''}<span>${mm}월 남은 근무 <b>${rw}번</b> · 오프 <b>${ro}일</b></span></span>`;
 }
 let shownM=0;
 function render(){
@@ -309,7 +328,7 @@ function render(){
   if(shownM!==viewM){shownM=viewM;pics(viewM)}
 }
 nowBox();render();
-setInterval(()=>{nowBox();board()},60000);
+setInterval(()=>{nowBox();board()},30000);
 $('cal').addEventListener('click',e=>{const b=e.target.closest('.day:not(.empty)');if(b){sel=+b.dataset.i;render()}});
 $('hero').addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b){sel=+b.dataset.go;render()}});
 $('prevM').addEventListener('click',()=>{viewM=11;cal();shownM=11;pics(11)});
@@ -317,7 +336,7 @@ $('nextM').addEventListener('click',()=>{viewM=12;cal();shownM=12;pics(12)});
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>pics(+b.dataset.p)));
 $('shotImg').addEventListener('click',()=>$('shot').classList.toggle('zoom'));
 $('mine').addEventListener('click',()=>{const g=+$('mine').dataset.go;if(g>=0){sel=g;render()}});
-$('goNow').addEventListener('click',()=>{const k=kst();let i=idxOf(k.getMonth()+1,k.getDate());if(k.getHours()<7)i-=1;if(i>=0){sel=i;render()}try{window.scrollTo({top:0,behavior:'smooth'})}catch(e){}});
+$('goNow').addEventListener('click',()=>{const g=+$('goNow').dataset.go;if(g>=0){sel=g;render()}});
 }
 </script>
 </body>
