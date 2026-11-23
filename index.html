@@ -53,11 +53,11 @@ button:focus-visible{outline:2px solid var(--tc);outline-offset:2px}
 .k-WOFF{background:transparent;color:var(--ta);border:1.5px solid var(--ta)}
 .k-ETC,.k-LEAVE{background:var(--card);color:var(--mute);border:1px solid var(--line)}
 main{padding:10px max(12px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px));max-width:1080px;margin:0 auto;display:grid;gap:10px}
-#hero,#now{scroll-margin-top:84px}
+#hero,#now,#mine{scroll-margin-top:84px}
 [hidden]{display:none!important}
-#calbox{grid-area:cal}#now{grid-area:now}#hero{grid-area:hero}#crew{grid-area:crew}#board{grid-area:board}#pics{grid-area:pics}
-main{grid-template-areas:"now" "cal" "hero" "crew" "board" "pics"}
-@media(min-width:760px){main{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"now hero" "cal hero" "crew board" "pics pics";align-items:start}}
+#mine{grid-area:me}#calbox{grid-area:cal}#now{grid-area:now}#hero{grid-area:hero}#crew{grid-area:crew}#board{grid-area:board}#pics{grid-area:pics}
+main{grid-template-areas:"me" "now" "cal" "hero" "crew" "board" "pics"}
+@media(min-width:760px){main{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"me me" "now hero" "cal hero" "crew board" "pics pics";align-items:start}}
 .hero{border-radius:18px;overflow:hidden;background:var(--card);border:1px solid var(--line)}
 .sky{position:relative;height:96px;padding:12px 16px;color:#fff;transition:background .5s}
 .sky.D{background:linear-gradient(160deg,#ffe29a,#ffb347 70%,#f59a23);color:#2b1a00}
@@ -95,10 +95,16 @@ main{grid-template-areas:"now" "cal" "hero" "crew" "board" "pics"}
 .row .h b{font-size:14px}
 .row .h span{font-size:11px;color:var(--mute)}
 .row.on{background:color-mix(in srgb,var(--c) 10%,transparent);margin:0 -12px;padding:6px 12px;border-radius:0}
-.now{border-radius:16px;padding:10px 12px;background:var(--ink);color:var(--bg);display:grid;gap:4px}
-.now .l{font-size:12px;opacity:.75}
-.now .s{font-size:17px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
-.now .chip{background:color-mix(in srgb,var(--bg) 12%,transparent);border-color:transparent;color:var(--bg)}
+.mebar{display:flex;align-items:center;gap:10px;width:100%;border:0;border-radius:16px;padding:10px 12px;background:var(--ink);color:var(--bg);text-align:left;min-height:52px}
+.mebar .av{width:30px;height:30px;font-size:13px}
+.mebar .st{flex:1;display:grid;line-height:1.3}
+.mebar .st b{font-size:16px;letter-spacing:-.02em}
+.mebar .st span{font-size:12px;opacity:.75}
+.mebar .go{font-size:13px;font-weight:600;opacity:.85;white-space:nowrap}
+.ward .wh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ward .wh h2{margin:0}
+.ward .wh .tm{font-size:12px;color:var(--mute);margin-left:auto;white-space:nowrap}
+.nowtag{display:inline-block;margin-top:3px;font-size:11px;font-weight:700;color:#fff;background:var(--e);border-radius:5px;padding:0 5px;width:max-content}
 .next{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;padding:8px 12px;border-radius:14px;background:var(--bg);border:1px solid var(--line);width:100%;text-align:left;min-height:44px}
 .next b{font-size:16px}
 .tabs{display:flex;gap:6px;margin-bottom:8px}
@@ -126,7 +132,8 @@ main{grid-template-areas:"now" "cal" "hero" "crew" "board" "pics"}
   </div>
 </header>
 <main id="main">
-  <section class="now" id="now" aria-live="polite"></section>
+  <button class="mebar" id="mine" type="button" aria-live="polite"></button>
+  <section class="panel ward" id="now" aria-live="polite"></section>
   <section class="panel cal" id="calbox">
     <div class="calh"><button class="mbtn" id="prevM" type="button" aria-label="이전 달">‹</button><h2 id="calT"></h2><button class="mbtn" id="nextM" type="button" aria-label="다음 달">›</button></div>
     <div class="grid" id="cal"></div>
@@ -170,7 +177,7 @@ const chip=(p,big)=>`<span class="chip${big?' big':''}${p.n===ME?' self':''}"><s
 const kst=()=>{const n=new Date();return new Date(n.getTime()+(540+n.getTimezoneOffset())*60000)};
 const idxOf=(m,d)=>days.findIndex(x=>x.m===m&&x.d===d);
 let sel=0;
-{const k=kst();let i=idxOf(k.getMonth()+1,k.getDate());if(k.getFullYear()!==2026||i<0)i=k<new Date(2026,10,1)?0:days.length-1;sel=i}
+{const k=kst();let i=idxOf(k.getMonth()+1,k.getDate());if(k.getFullYear()!==2026||i<0)i=k<new Date(2026,10,1)?0:days.length-1;else if(k.getHours()<7&&i>0&&cat(days[i-1].c[ME])==='N')i-=1;sel=i}
 const todayI=sel;
 const $=id=>document.getElementById(id);
 
@@ -252,21 +259,43 @@ function board(){
   let h=`<h2>${days[sel].m}/${days[sel].d} 병동 근무</h2>`;
   for(const s of ['D','E','N','MD']){
     const l=on(sel,s);
-    h+=`<div class="row${s===k?' on':''}" style="--c:var(--${s.toLowerCase()})"><div class="h"><b>${SN[s]}</b>${HRS[s]?`<span>${HRS[s]}</span>`:''}</div><div class="who">${l.map(p=>chip(p)).join('')||'<span class="note">없음</span>'}</div></div>`;
+    h+=`<div class="row${s===k?' on':''}" style="--c:var(--${s.toLowerCase()})"><div class="h"><b>${SN[s]}</b>${HRS[s]?`<span>${HRS[s]}</span>`:''}${sel===nowI&&s===nowS?'<span class="nowtag">지금</span>':''}</div><div class="who">${l.map(p=>chip(p)).join('')||'<span class="note">없음</span>'}</div></div>`;
   }
   if(etc.length)h+=`<div class="row"><div class="h"><b>기타</b><span>인계 제외</span></div><div class="who">${etc.map(p=>chip(p)).join('')}</div></div>`;
   $('board').innerHTML=h;
 }
+const START={D:7,E:15,N:23},END={D:15,E:23,N:7};
+let nowI=-1,nowS='';
 function nowBox(){
   const k=kst(),h=k.getHours();
   let i=idxOf(k.getMonth()+1,k.getDate()),s=h>=7&&h<15?'D':h>=15&&h<23?'E':'N';
+  const ti=i;
   if(h<7)i-=1;
-  const box=$('now');
-  if(k.getFullYear()!==2026||i<0||i>=days.length){box.hidden=true;return}
-  box.hidden=false;
-  const l=on(i,s),mine=cat(days[i].c[ME])===s;
-  const hm=`${String(h).padStart(2,'0')}:${String(k.getMinutes()).padStart(2,'0')}`;
-  box.innerHTML=`<div class="s"><span class="pill k-${s}">${s}</span>지금 ${SN[s]} 근무 중${mine?' · 나도':''}<span class="l" style="margin-left:auto;font-weight:500">${hm} · ${short(i)}</span></div><div class="who">${l.map(p=>chip(p)).join('')}</div>`;
+  const box=$('now'),me=$('mine');
+  if(k.getFullYear()!==2026||ti<0){box.hidden=true;me.hidden=true;nowI=-1;return}
+  nowI=i;nowS=s;
+  /* 병동: 지금 근무자 */
+  if(i>=0){
+    box.hidden=false;
+    const l=on(i,s);
+    box.innerHTML=`<div class="wh"><h2>지금 병동</h2><span class="pill k-${s}">${s}</span><b>${SN[s]}</b><span class="tm">${HRS[s]}</span></div><div class="who">${l.map(p=>chip(p)).join('')}</div>`;
+  }else box.hidden=true;
+  /* 나: 지금 근무 중인지, 아니면 오늘 상태와 다음 근무 */
+  me.hidden=false;
+  const myNow=i>=0&&cat(days[i].c[ME])===s;
+  let html,go;
+  if(myNow){
+    html=`<span class="st"><span>나 · 지금</span><b>${SN[s]} 근무 중 · ${END[s]}시까지</b></span>`;go=i;
+  }else{
+    const tc=days[ti].c[ME],tk=cat(tc);
+    const today=['D','E','N'].includes(tk)?`오늘 ${SN[tk]}`:pillTxt(tc)==='원티드'?'오늘 원티드 오프':tk==='OFF'?'오늘 오프':`오늘 ${pillTxt(tc)}`;
+    let j=-1;
+    for(let d=ti;d<days.length&&j<0;d++){const c=cat(days[d].c[ME]);if(['D','E','N'].includes(c)&&(d>ti||START[c]>h))j=d}
+    const nx=j<0?'12월 안에 남은 근무 없음':`다음 근무 ${j===ti?'오늘':short(j)} ${SN[cat(days[j].c[ME])]} ${START[cat(days[j].c[ME])]}시`;
+    html=`<span class="st"><span>나 · ${today}${['D','E','N'].includes(tk)&&j!==ti?' (끝남)':''}</span><b>${nx}</b></span>`;go=j<0?ti:j;
+  }
+  me.dataset.go=go;
+  me.innerHTML=`<span class="av">온유</span>${html}<span class="go">보기 ›</span>`;
 }
 let shownM=0;
 function render(){
@@ -276,13 +305,14 @@ function render(){
   if(shownM!==viewM){shownM=viewM;pics(viewM)}
 }
 nowBox();render();
-setInterval(nowBox,60000);
+setInterval(()=>{nowBox();board()},60000);
 $('cal').addEventListener('click',e=>{const b=e.target.closest('.day:not(.empty)');if(b){sel=+b.dataset.i;render()}});
 $('hero').addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b){sel=+b.dataset.go;render()}});
 $('prevM').addEventListener('click',()=>{viewM=11;cal();shownM=11;pics(11)});
 $('nextM').addEventListener('click',()=>{viewM=12;cal();shownM=12;pics(12)});
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>pics(+b.dataset.p)));
 $('shotImg').addEventListener('click',()=>$('shot').classList.toggle('zoom'));
+$('mine').addEventListener('click',()=>{const g=+$('mine').dataset.go;if(g>=0){sel=g;render()}});
 $('goNow').addEventListener('click',()=>{const k=kst();let i=idxOf(k.getMonth()+1,k.getDate());if(k.getHours()<7)i-=1;if(i>=0){sel=i;render()}try{window.scrollTo({top:0,behavior:'smooth'})}catch(e){}});
 }
 </script>
