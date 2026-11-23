@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>정온유 인계 보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE everyday work tool for one ward nurse, calm and quick to read between rounds
+   IDEA the ward handover relay: night → day → evening → night, a baton passed down a line
+   PICTURE a sky band for the selected shift (sun, sunset, moon) over a vertical relay: 받는 인계 → 나 → 주는 인계
+   COLOUR white or deep night ground; shift colours amber D, coral E, indigo N, teal MD; team rose A, green B, sky C
+   TYPE IBM Plex Sans KR for everything, weights carry hierarchy
+   LAYOUT phone first: header, Sun–Sat month calendar, now, relay, coworkers, ward board, original photos; at 760px+ calendar beside relay */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0e1117);--ink:light-dark(#15171d,#eef0f6);--mute:light-dark(#646a78,#9aa1b2);--line:light-dark(#e6e8ee,#262b37);--card:light-dark(#f5f6f9,#171b25);--d:#f2a01f;--e:#ee5a3a;--n:#4a50e0;--md:#0f9e8c;--ta:#e0577d;--tb:#3aa858;--tc:#169fe3;--off:light-dark(#9aa1ae,#5d6575)}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 "IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--tc);outline-offset:2px}
+.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+.bar{display:flex;align-items:center;gap:10px;padding:8px max(14px,env(safe-area-inset-left,0px))}
+.me{display:flex;align-items:center;gap:10px;flex:1}
+.av{width:34px;height:34px;border-radius:50%;background:var(--tc);color:#fff;display:grid;place-items:center;font-weight:700;font-size:15px;flex:none}
+.me b{display:block;font-size:17px;line-height:1.15;letter-spacing:-.02em}
+.me small{color:var(--mute);font-size:13px}
+.nowbtn{border:1px solid var(--line);background:var(--card);border-radius:999px;height:36px;padding:0 16px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px}
+.nowbtn i{width:8px;height:8px;border-radius:50%;background:var(--e);box-shadow:0 0 0 0 var(--e);animation:ping 1.8s infinite}
+.cal{padding:10px 10px 8px}
+.calh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}
+.calh h2{margin:0;font-size:17px;letter-spacing:-.02em}
+.mbtn{width:40px;height:36px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:18px;font-weight:600;display:grid;place-items:center}
+.mbtn:disabled{opacity:.3;cursor:default}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
+.wk{text-align:center;font-size:12px;font-weight:600;color:var(--mute);padding:2px 0}
+.wk.sun,.day .n.sun{color:var(--e)}
+.wk.sat,.day .n.sat{color:var(--n)}
+.day{border:0;background:transparent;border-radius:10px;padding:3px 0 4px;min-height:44px;display:grid;justify-items:center;align-content:start;gap:2px;transition:background .2s,transform .15s}
+.day:active{transform:scale(.95)}
+.day .n{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2}
+.day.today .n{text-decoration:underline 2px;text-underline-offset:4px}
+.day[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.day[aria-pressed=true] .n{color:inherit}
+.day.empty{visibility:hidden}
+.day .pill{min-width:0;width:calc(100% - 8px);max-width:40px;font-size:11px;padding:0 2px}
+.pill{min-width:30px;height:18px;border-radius:6px;font-size:12px;font-weight:700;display:grid;place-items:center;color:#fff;padding:0 4px}
+.k-D{background:var(--d);color:#2b1a00}.k-E{background:var(--e)}.k-N{background:var(--n)}.k-MD{background:var(--md)}
+.k-OFF{background:transparent;color:var(--off);border:1.5px dashed var(--off)}
+.k-WOFF{background:transparent;color:var(--ta);border:1.5px solid var(--ta)}
+.k-ETC,.k-LEAVE{background:var(--card);color:var(--mute);border:1px solid var(--line)}
+main{padding:10px max(12px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px));max-width:1080px;margin:0 auto;display:grid;gap:10px}
+#hero,#now{scroll-margin-top:84px}
+[hidden]{display:none!important}
+#calbox{grid-area:cal}#now{grid-area:now}#hero{grid-area:hero}#crew{grid-area:crew}#board{grid-area:board}#pics{grid-area:pics}
+main{grid-template-areas:"now" "cal" "hero" "crew" "board" "pics"}
+@media(min-width:760px){main{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"now hero" "cal hero" "crew board" "pics pics";align-items:start}}
+.hero{border-radius:18px;overflow:hidden;background:var(--card);border:1px solid var(--line)}
+.sky{position:relative;height:96px;padding:12px 16px;color:#fff;transition:background .5s}
+.sky.D{background:linear-gradient(160deg,#ffe29a,#ffb347 70%,#f59a23);color:#2b1a00}
+.sky.E{background:linear-gradient(160deg,#ff9a6b,#e8504a 55%,#a8346f)}
+.sky.N{background:linear-gradient(170deg,#141a4f,#2b2f8f 70%,#4a3aa8)}
+.sky.OFF,.sky.WOFF,.sky.LEAVE,.sky.ETC{background:linear-gradient(160deg,light-dark(#eef1f6,#202634),light-dark(#d9dfe9,#161b26));color:var(--ink)}
+.sky svg{position:absolute;right:0;top:0;width:60%;height:100%}
+.sky .dt{position:relative;font-size:13px;font-weight:500;opacity:.85}
+.sky h1{position:relative;margin:2px 0 0;font-size:32px;line-height:1.05;letter-spacing:-.03em;font-weight:700}
+.sky .sub{position:relative;font-size:13px;font-weight:500;margin-top:2px;opacity:.9}
+.relay{padding:12px 14px 12px;display:grid;gap:0}
+.stop{display:grid;grid-template-columns:24px minmax(0,1fr);gap:10px;position:relative}
+.rail{position:relative;display:flex;justify-content:center}
+.dot{width:14px;height:14px;border-radius:50%;margin-top:3px;border:3px solid var(--bg);box-shadow:0 0 0 2px var(--c);background:var(--c);z-index:1}
+.stop.mine .dot{width:20px;height:20px;margin-top:0}
+.line{position:absolute;top:16px;bottom:-6px;width:4px;border-radius:2px;background:linear-gradient(var(--c),var(--c2))}
+.baton{position:absolute;left:50%;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--ink);top:20px;animation:run 2.4s cubic-bezier(.5,0,.5,1) infinite}
+.body{padding-bottom:10px}
+.lab{font-size:13px;color:var(--mute);font-weight:500}
+.lab b{color:var(--ink);font-weight:600}
+.who{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.chip{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 10px 0 8px;border-radius:9px;background:var(--card);border:1px solid var(--line);font-size:15px;font-weight:600;white-space:nowrap}
+.chip.big{height:36px;font-size:16px;background:var(--bg);border:1.5px solid var(--c,var(--line))}
+.chip.self{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip .t{flex:none;width:18px;height:18px;border-radius:5px;color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center}
+.t-A{background:var(--ta)}.t-B{background:var(--tb)}.t-C{background:var(--tc)}
+.chip .cd{font-size:12px;color:var(--mute);font-weight:600}
+.others{margin-top:3px;font-size:13px;color:var(--mute)}
+.note{font-size:13px;color:var(--mute);margin-top:4px}
+.panel{border:1px solid var(--line);border-radius:16px;padding:10px 12px;background:var(--bg)}
+.panel h2{margin:0 0 4px;font-size:16px;letter-spacing:-.02em}
+.row{display:grid;grid-template-columns:56px minmax(0,1fr);gap:8px;padding:6px 0;border-top:1px solid var(--line);align-items:start}
+.row:first-of-type{border-top:0}
+.row .h{display:flex;flex-direction:column;gap:0;padding-top:8px;line-height:1.25}
+.row .h b{font-size:14px}
+.row .h span{font-size:11px;color:var(--mute)}
+.row.on{background:color-mix(in srgb,var(--c) 10%,transparent);margin:0 -12px;padding:6px 12px;border-radius:0}
+.now{border-radius:16px;padding:10px 12px;background:var(--ink);color:var(--bg);display:grid;gap:4px}
+.now .l{font-size:12px;opacity:.75}
+.now .s{font-size:17px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.now .chip{background:color-mix(in srgb,var(--bg) 12%,transparent);border-color:transparent;color:var(--bg)}
+.next{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;padding:8px 12px;border-radius:14px;background:var(--bg);border:1px solid var(--line);width:100%;text-align:left;min-height:44px}
+.next b{font-size:16px}
+.tabs{display:flex;gap:6px;margin-bottom:8px}
+.tab{height:36px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:15px}
+.tab[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.shot{overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff;-webkit-overflow-scrolling:touch}
+.shot img{display:block;width:100%;height:auto;cursor:zoom-in}
+.shot.zoom img{width:auto;max-width:none;cursor:zoom-out}
+.fade{animation:fade .35s ease}
+@keyframes run{0%{top:20px;opacity:0}15%{opacity:1}85%{opacity:1}100%{top:calc(100% - 4px);opacity:0}}
+@keyframes ping{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--e) 60%,transparent)}80%,100%{box-shadow:0 0 0 8px transparent}}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes bob{50%{transform:translateY(-6px)}}
+@keyframes tw{50%{opacity:.25}}
+.bob{animation:bob 4s ease-in-out infinite}
+.tw{animation:tw 3s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.baton,.bob,.tw,.nowbtn i,.fade{animation:none}.baton{display:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="bar">
+    <div class="me"><div class="av">온유</div><div><b>정온유 인계 보드</b><small>C팀 · 2026년 11–12월 근무표</small></div></div>
+    <button class="nowbtn" id="goNow" type="button"><i></i>지금</button>
+  </div>
+</header>
+<main id="main">
+  <section class="now" id="now" aria-live="polite"></section>
+  <section class="panel cal" id="calbox">
+    <div class="calh"><button class="mbtn" id="prevM" type="button" aria-label="이전 달">‹</button><h2 id="calT"></h2><button class="mbtn" id="nextM" type="button" aria-label="다음 달">›</button></div>
+    <div class="grid" id="cal"></div>
+  </section>
+  <section class="hero" id="hero"></section>
+  <section class="panel" id="crew"></section>
+  <section class="panel" id="board"></section>
+  <section class="panel" id="pics">
+    <h2>원본 근무표</h2>
+    <div class="tabs"><button class="tab" type="button" data-p="11" aria-pressed="true">11월</button><button class="tab" type="button" data-p="12" aria-pressed="false">12월</button></div>
+    <div class="shot" id="shot"><img id="shotImg" src="img/nov.png" alt="2026년 11월 근무표 원본 사진"></div>
+    <div class="note">사진을 누르면 원래 크기로 커져요. 옆으로 밀어서 볼 수 있어요.</div>
+  </section>
+</main>
+<script>
+{
+const RAW={"11":[["송하연","A","N / / / D D E E / D D D D / // E N N / / E E E // / D N N / /"],["강은미","A","D / / N N / / E E E E / D D / / / / N N / / D E / / D E N N"],["오은지","A","/ / d1 D E E / N N N / / E E E / D1 E E E / / N N / / / D D DCC"],["남규리","A","/ N N / / N N / / N N N / / D D D D DCC / N N / / E E E / E E"],["홍서혜","A","// D D E / MD MD MD / MD MD MD / N N / / / / D D D / D D MD MD / / MD"],["박혜진","A","E E E / / D D D / T2 T2 E / // MD N / / D MD MD MD / T2 N N / / / D"],["정다율","B","// D D D E E // // E E N N // // N N / // D D D D / T2 E E E / N N"],["강혜원","B","D E / MD N N N / / D E E E / / D D D / D N N / / D D1 D1 / / T2"],["윤수경","B","/ d1 d1 d1 d1 d1 / / d1 d1 d1 d1 d1 / / d1 N N / / / E E E / D N N / /"],["김휘선","B","E E E E / / E N N N / / D D D / E E E / / / D D N N / / D D"],["김지우","B","N N / / D d D / d D D / N N / / / D1 MD E E / N N / / D D E /"],["황선하","B","MD / N N / / / / MD T2 T2 D / E E E / MD N N / / MD MD MD / D E / T2"],["윤가현","C","// E E E E / // // d D1 E / N N / / E E E E // // N N N / / D D E"],["정온유","C","/ D D D / E N N N / / E E E E / / D N N / / / D D N N / / D"],["박주은","C","E N N N / / D D E E N / / D D D D / D DCC / / D1 E E E / / E E"],["박윤정","C","/ MD MD / N N / / / T5 D D D / N N N / / D D D D / / / E E / N"],["김수현","C","N / / D1 D d / D d T5 / N N / / E E / MD MD N N / / / D1 D1 MD MD /"],["신은지","C","D / H2 H2 MD / E E / T2 T2 / MD MD / MD MD N / / E E E / / D D N N /"]],"12":[["송하연","A","E E / / N N / / D D H2 // N N / / D D E E E / / D D // / D E E E"],["강은미","A","/ / E E E / E E N N / / E E E / N N / / D D D E / / E E / N N"],["오은지","A","/ / N N / / / D D H2 D D / D D D D / // D N N / / / N N / / D D"],["남규리","A","N N / / D E / / E E E / D DCC N N / / D E / E E E / D D N N / /"],["홍서혜","A","MD / D D / D D / T2 MD N N / / MD MD MD E / MD MD / N N N / / / D MD /"],["박혜진","A","D D MD / MD MD MD N / / MD E / // / E E / N N / / MD MD E E / MD MD E /"],["정다율","B","/ / E E / E N N / / E E / / N N / / d 결혼 d d 결혼 결혼 // // 결혼 결혼 결혼 결혼 //"],["강혜원","B","N N / / / D DCC D D / N N / / / E E E E / / E E N N / / D D D /"],["윤수경","B","/ D D DCC N N N / / D D D E / D D N N / / E E // / D N N / / E E"],["김휘선","B","D D / D D / D DCC N N / / D D E / H2 H2 N N / / D DCC E E E / / N N"],["김지우","B","/ E N N / / E E E / / / MD E / / D1 D / D N N N / / D D E E / D"],["황선하","B","E / / MD E / MD MD MD E / / N N / / D MD MD / D MD MD E / / MD N N / /"],["윤가현","C","E / / d 결혼 결혼 결혼 결혼 결혼 결혼 결혼 // // // // // // d d // / N N / / D D N N / /"],["정온유","C","D N N / / D D D D / E N N / / D D E / N N / / D E E / / E E /"],["박주은","C","/ D D N N / / E E E / E E N N / / D E E / / D N N / / / D1 D1 D"],["박윤정","C","N / / / D E E / E N N / / E E E E / / D D D DCC D / // E E / N N"],["김수현","C","/ E E E E / / N N / / D D D D / MD N N / / / D1 D1 D N N / / D1 E"],["신은지","C","/ MD MD / / N N / / D D MD / MD MD N N / / / E E E / MD MD / D D D MD"]]};
+const ME='정온유',MY='C';
+const SN={D:'데이',E:'이브닝',N:'나이트',MD:'미드'};
+const HRS={D:'07–15시',E:'15–23시',N:'23–07시',MD:''};
+const WD=['일','월','화','수','목','금','토'];
+const people=RAW['11'].map(r=>({n:r[0],t:r[1]}));
+const days=[];
+for(const m of ['11','12']){
+  const rows=RAW[m].map(r=>[r[0],r[2].split(' ')]);
+  const len=rows[0][1].length;
+  for(let d=1;d<=len;d++){
+    const c={};rows.forEach(([n,a])=>c[n]=a[d-1]);
+    const dt=new Date(2026,+m-1,d);
+    days.push({m:+m,d,w:dt.getDay(),c});
+  }
+}
+const cat=x=>x==='D'||x==='d'||x==='D1'?'D':x==='E'?'E':x==='N'?'N':x==='MD'?'MD':x==='/'?'OFF':x==='//'?'WOFF':x==='결혼'?'LEAVE':'ETC';
+const etcName=x=>/^T\d/.test(x)?'교육':x==='H2'?'성장':x==='결혼'?'결혼휴가':x;
+const pillTxt=x=>{const k=cat(x);return k==='OFF'?'오프':k==='WOFF'?'원티드':k==='LEAVE'?'휴가':k==='ETC'?etcName(x):x==='MD'?'MD':k};
+const team=n=>people.find(p=>p.n===n).t;
+const on=(i,s)=>i<0||i>=days.length?null:people.filter(p=>cat(days[i].c[p.n])===s).map(p=>({...p,code:days[i].c[p.n]})).sort((a,b)=>(b.t===MY)-(a.t===MY));
+const fmt=i=>{const x=days[i];return `${x.m}월 ${x.d}일 ${WD[x.w]}요일`};
+const short=i=>{const x=days[i];return `${x.m}/${x.d} (${WD[x.w]})`};
+const chip=(p,big)=>`<span class="chip${big?' big':''}${p.n===ME?' self':''}"><span class="t t-${p.t}">${p.t}</span>${p.n}${p.code&&p.code!=='D'&&p.code!=='E'&&p.code!=='N'&&p.code!=='MD'?`<span class="cd">${etcName(p.code)}</span>`:''}</span>`;
+const kst=()=>{const n=new Date();return new Date(n.getTime()+(540+n.getTimezoneOffset())*60000)};
+const idxOf=(m,d)=>days.findIndex(x=>x.m===m&&x.d===d);
+let sel=0;
+{const k=kst();let i=idxOf(k.getMonth()+1,k.getDate());if(k.getFullYear()!==2026||i<0)i=k<new Date(2026,10,1)?0:days.length-1;sel=i}
+const todayI=sel;
+const $=id=>document.getElementById(id);
+
+let viewM=0;
+function cal(){
+  const m=viewM||days[sel].m;
+  $('calT').textContent=`2026년 ${m}월`;
+  $('prevM').disabled=m===11;$('nextM').disabled=m===12;
+  let h=WD.map((w,i)=>`<div class="wk${i===0?' sun':i===6?' sat':''}">${w}</div>`).join('');
+  const list=days.map((x,i)=>({...x,i})).filter(x=>x.m===m);
+  for(let k=0;k<list[0].w;k++)h+='<span class="day empty"></span>';
+  for(const x of list){
+    const code=x.c[ME],k=cat(code);
+    h+=`<button type="button" class="day${x.i===todayI?' today':''}" data-i="${x.i}" aria-pressed="${x.i===sel}" aria-label="${fmt(x.i)} ${pillTxt(code)}"><span class="n${x.w===0?' sun':x.w===6?' sat':''}">${x.d}</span><span class="pill k-${k}">${pillTxt(code)}</span></button>`;
+  }
+  $('cal').innerHTML=h;
+}
+function pics(m){
+  document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p==String(m)));
+  const img=$('shotImg');img.src=m===11?'img/nov.png':'img/dec.png';img.alt=`2026년 ${m}월 근무표 원본 사진`;
+  $('shot').classList.remove('zoom');
+}
+function skyArt(k){
+  const o='<svg viewBox="0 0 200 96" preserveAspectRatio="xMaxYMid meet" aria-hidden="true">';
+  if(k==='D')return o+`<g class="bob"><circle cx="150" cy="44" r="34" fill="#fff4c9" opacity=".5"/><circle cx="150" cy="44" r="22" fill="#fff8e0"/></g><path d="M40 96 Q90 70 140 82 T200 74 V96Z" fill="#f08a1c" opacity=".4"/></svg>`;
+  if(k==='E')return o+`<circle cx="148" cy="70" r="28" fill="#ffd08a" opacity=".9"/><defs><linearGradient id="wv" x1="0" x2="1"><stop offset="0" stop-color="#7a2450" stop-opacity="0"/><stop offset=".45" stop-color="#7a2450" stop-opacity=".5"/></linearGradient></defs><path d="M0 72 H200 V96 H0Z" fill="url(#wv)"/><path d="M110 80 H190 M126 88 H174" stroke="#ffd08a" stroke-width="2.5" stroke-linecap="round" opacity=".55"/></svg>`;
+  if(k==='N'){let s='',r=11;for(let i=0;i<12;i++){r=r*16807%2147483647;const x=40+r%160;r=r*16807%2147483647;const y=6+r%84;s+=`<circle class="tw" style="animation-delay:${(i%5)*.6}s" cx="${x}" cy="${y}" r="${i%3?1.1:1.7}" fill="#fff"/>`}
+    return o+`${s}<g class="bob"><circle cx="150" cy="46" r="24" fill="#f4f1ff"/><circle cx="161" cy="38" r="20" fill="#2b2f8f"/></g></svg>`}
+  return o+`<g class="bob" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity=".3"><path d="M132 44 h16 l-16 20 h16"/><path d="M158 22 h12 l-12 15 h12"/></g><path d="M70 96 q40-22 80-4 q26 10 50 -2 V96Z" fill="currentColor" opacity=".08"/></svg>`;
+}
+function stopHtml(label,s,i,list,needTeam){
+  const c=`var(--${s.toLowerCase()})`;
+  if(list===null)return `<div class="lab"><b>${label}</b> · ${SN[s]}</div><div class="note">${i<0?'10월':'1월'} 근무표가 없어요</div>`;
+  const mine=list.filter(p=>p.t===MY),rest=list.filter(p=>p.t!==MY);
+  let h=`<div class="lab"><b>${label}</b> · ${short(i)} ${SN[s]}</div>`;
+  if(mine.length)h+=`<div class="who">${mine.map(p=>chip(p,true)).join('')}</div>`+(rest.length?`<div class="others">다른 팀 ${rest.map(p=>p.n).join(', ')}</div>`:'');
+  else if(rest.length)h+=`<div class="note">이날 C팀 ${SN[s]} 근무자가 없어요. 다른 팀에서 인계해요.</div><div class="who">${rest.map(p=>chip(p,true)).join('')}</div>`;
+  else h+=`<div class="note">${SN[s]} 근무자가 없어요</div>`;
+  return h;
+}
+function hero(){
+  const code=days[sel].c[ME],k=cat(code);
+  const isWork=k==='D'||k==='E'||k==='N';
+  const title=isWork?SN[k]:k==='WOFF'?'원티드 오프':k==='OFF'?'오프':k==='LEAVE'?'휴가':etcName(code);
+  const sub=isWork?`${HRS[k]} · C팀`+(code!==k?` · ${code}`:''):'쉬는 날이에요';
+  let h=`<div class="sky ${k}">${skyArt(k)}<div class="dt">${fmt(sel)}${sel===todayI?' · 오늘':''}</div><h1>${title}</h1><div class="sub">${sub}</div></div>`;
+  if(isWork){
+    const from=k==='D'?[sel-1,'N']:k==='E'?[sel,'D']:[sel,'E'];
+    const to=k==='D'?[sel,'E']:k==='E'?[sel,'N']:[sel+1,'D'];
+    const fl=on(from[0],from[1]),tl=on(to[0],to[1]);
+    const cv=s=>`var(--${s.toLowerCase()})`;
+    h+=`<div class="relay fade">
+      <div class="stop" style="--c:${cv(from[1])};--c2:${cv(k)}"><div class="rail"><span class="line"></span><span class="baton"></span><span class="dot"></span></div><div class="body">${stopHtml('인계 받음',from[1],from[0],fl)}</div></div>
+      <div class="stop mine" style="--c:${cv(k)};--c2:${cv(to[1])}"><div class="rail"><span class="line"></span><span class="baton" style="animation-delay:1.2s"></span><span class="dot"></span></div><div class="body"><div class="lab"><b>나</b> · ${SN[k]} 근무</div><div class="who">${chip({n:ME,t:MY,code},true)}</div></div></div>
+      <div class="stop" style="--c:${cv(to[1])}"><div class="rail"><span class="dot"></span></div><div class="body" style="padding-bottom:0">${stopHtml('인계 줌',to[1],to[0],tl)}</div></div>
+    </div>`;
+  }else{
+    let j=sel+1;while(j<days.length&&!['D','E','N'].includes(cat(days[j].c[ME])))j++;
+    h+=`<div class="relay fade"><div class="note" style="margin:0">오늘은 인계가 없어요.</div>`+
+      (j<days.length?`<button class="next" type="button" data-go="${j}"><span><span class="lab">다음 근무</span><br><b>${short(j)} ${SN[cat(days[j].c[ME])]}</b></span><span class="pill k-${cat(days[j].c[ME])}">${cat(days[j].c[ME])}</span></button>`:`<div class="note">12월 안에는 남은 근무가 없어요</div>`)+`</div>`;
+  }
+  $('hero').innerHTML=h;
+}
+function crew(){
+  const k=cat(days[sel].c[ME]);
+  const box=$('crew');box.hidden=!['D','E','N'].includes(k);if(box.hidden)return;
+  const md=on(sel,'MD');
+  let h=`<h2>같이 일하는 사람</h2>`;
+  if(['D','E','N'].includes(k)){
+    const mates=on(sel,k).filter(p=>p.n!==ME);
+    h+=`<div class="row" style="--c:var(--${k.toLowerCase()})"><div class="h"><b>${SN[k]}</b><span>같은 근무</span></div><div class="who">${mates.map(p=>chip(p)).join('')||'<span class="note">없음</span>'}</div></div>`;
+  }
+  h+=`<div class="row"><div class="h"><b>미드</b></div><div><div class="who">${md.map(p=>chip(p)).join('')||'<span class="note">이날 미드 없음</span>'}</div><div class="note">인수인계 없음</div></div></div>`;
+  $('crew').innerHTML=h;
+}
+function board(){
+  const k=cat(days[sel].c[ME]);
+  const etc=people.filter(p=>['ETC','LEAVE'].includes(cat(days[sel].c[p.n]))).map(p=>({...p,code:days[sel].c[p.n]}));
+  let h=`<h2>${days[sel].m}/${days[sel].d} 병동 근무</h2>`;
+  for(const s of ['D','E','N','MD']){
+    const l=on(sel,s);
+    h+=`<div class="row${s===k?' on':''}" style="--c:var(--${s.toLowerCase()})"><div class="h"><b>${SN[s]}</b>${HRS[s]?`<span>${HRS[s]}</span>`:''}</div><div class="who">${l.map(p=>chip(p)).join('')||'<span class="note">없음</span>'}</div></div>`;
+  }
+  if(etc.length)h+=`<div class="row"><div class="h"><b>기타</b><span>인계 제외</span></div><div class="who">${etc.map(p=>chip(p)).join('')}</div></div>`;
+  $('board').innerHTML=h;
+}
+function nowBox(){
+  const k=kst(),h=k.getHours();
+  let i=idxOf(k.getMonth()+1,k.getDate()),s=h>=7&&h<15?'D':h>=15&&h<23?'E':'N';
+  if(h<7)i-=1;
+  const box=$('now');
+  if(k.getFullYear()!==2026||i<0||i>=days.length){box.hidden=true;return}
+  box.hidden=false;
+  const l=on(i,s),mine=cat(days[i].c[ME])===s;
+  const hm=`${String(h).padStart(2,'0')}:${String(k.getMinutes()).padStart(2,'0')}`;
+  box.innerHTML=`<div class="s"><span class="pill k-${s}">${s}</span>지금 ${SN[s]} 근무 중${mine?' · 나도':''}<span class="l" style="margin-left:auto;font-weight:500">${hm} · ${short(i)}</span></div><div class="who">${l.map(p=>chip(p)).join('')}</div>`;
+}
+let shownM=0;
+function render(){
+  if(days[sel].m!==viewM||!$('cal').children.length){viewM=days[sel].m;cal()}
+  else $('cal').querySelectorAll('.day[data-i]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.i===sel));
+  hero();crew();board();
+  if(shownM!==viewM){shownM=viewM;pics(viewM)}
+}
+nowBox();render();
+setInterval(nowBox,60000);
+$('cal').addEventListener('click',e=>{const b=e.target.closest('.day:not(.empty)');if(b){sel=+b.dataset.i;render()}});
+$('hero').addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b){sel=+b.dataset.go;render()}});
+$('prevM').addEventListener('click',()=>{viewM=11;cal();shownM=11;pics(11)});
+$('nextM').addEventListener('click',()=>{viewM=12;cal();shownM=12;pics(12)});
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>pics(+b.dataset.p)));
+$('shotImg').addEventListener('click',()=>$('shot').classList.toggle('zoom'));
+$('goNow').addEventListener('click',()=>{const k=kst();let i=idxOf(k.getMonth()+1,k.getDate());if(k.getHours()<7)i-=1;if(i>=0){sel=i;render()}try{window.scrollTo({top:0,behavior:'smooth'})}catch(e){}});
+}
+</script>
+</body>
+</html>
