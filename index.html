@@ -32,8 +32,6 @@ button:focus-visible{outline:2px solid var(--tc);outline-offset:2px}
 .cd{--c:var(--off);border:1.5px solid var(--c);background:color-mix(in srgb,var(--c) 12%,var(--bg));border-radius:12px;min-height:40px;padding:3px 12px;display:grid;justify-items:end;line-height:1.2;text-align:right}
 .cd .cl{font-size:11px;font-weight:600;color:var(--mute)}
 .cd b{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
-.mstat{display:flex;flex-wrap:wrap;gap:4px 12px;width:100%;font-size:12px;opacity:.85;padding-top:6px;margin-top:2px;border-top:1px solid color-mix(in srgb,var(--bg) 18%,transparent)}
-.mstat b{font-weight:700}
 .cal{padding:10px 10px 8px}
 .calh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}
 .calh h2{margin:0;font-size:17px;letter-spacing:-.02em}
@@ -99,7 +97,7 @@ main{grid-template-areas:"me" "now" "cal" "hero" "crew" "board" "pics"}
 .row .h b{font-size:14px}
 .row .h span{font-size:11px;color:var(--mute)}
 .row.on{background:color-mix(in srgb,var(--c) 10%,transparent);margin:0 -12px;padding:6px 12px;border-radius:0}
-.mebar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;width:100%;border:0;border-radius:16px;padding:10px 12px;background:var(--ink);color:var(--bg);text-align:left;min-height:52px}
+.mebar{display:flex;align-items:center;gap:10px;width:100%;border:0;border-radius:16px;padding:10px 12px;background:var(--ink);color:var(--bg);text-align:left;min-height:52px}
 .mebar>.pill{flex:none;min-width:40px;height:26px;font-size:12px;border-radius:8px}
 .mebar .st{flex:1;display:grid;line-height:1.3}
 .mebar .st b{font-size:16px;letter-spacing:-.02em}
@@ -305,20 +303,17 @@ function nowBox(){
   /* 오늘 상태, 다음 근무, 남은 오프·이달 남은 근무 */
   const tc=days[ti].c[ME],tk=cat(tc);
   let html,go;
-  if(myNow){html=`<span class="st"><span>나 · 지금</span><b>${SN[curS]} 근무 중 · ${END[curS]}시 퇴근</b></span>`;go=cur}
+  if(myNow){html=`<span class="st"><span>나 · 지금</span><b>${SN[curS]} 근무 중 · ${END[curS]}시까지</b></span>`;go=cur}
   else{
     const today=W.includes(tk)?`오늘 ${SN[tk]}`:tk==='WOFF'?'오늘 원티드 오프':tk==='OFF'?'오늘 오프':`오늘 ${pillTxt(tc)}`;
-    const nx=nxt<0?'12월 안에 남은 근무 없음':`다음 근무 ${nxt===ti?'오늘':short(nxt)} ${SN[cat(days[nxt].c[ME])]} · ${START[cat(days[nxt].c[ME])]-1}시 출발`;
+    const nx=nxt<0?'12월 안에 남은 근무 없음':`다음 근무 ${nxt===ti?'오늘':short(nxt)} ${SN[cat(days[nxt].c[ME])]} ${START[cat(days[nxt].c[ME])]}시`;
     html=`<span class="st"><span>나 · ${today}${W.includes(tk)&&nxt!==ti?' (끝남)':''}</span><b>${nx}</b></span>`;go=nxt<0?ti:nxt;
   }
-  let offRun=0;if(!myNow&&!W.includes(tk))for(let j=ti;j<days.length&&!W.includes(cat(days[j].c[ME]));j++)offRun++;
-  const mm=days[ti].m,rest=days.map((x,j)=>({x,j})).filter(o=>o.x.m===mm&&o.j>ti);
-  const rw=rest.filter(o=>W.includes(cat(o.x.c[ME]))).length,ro=rest.filter(o=>['OFF','WOFF'].includes(cat(o.x.c[ME]))).length;
   me.dataset.go=go;
   const tg=$('tog');tg.style.setProperty('--c',myNow?`var(--${curS.toLowerCase()})`:'var(--off)');
   if(myNow)setTimeout(()=>tg.classList.add('on'),250);else tg.classList.remove('on');
   const mk=myNow?curS:tk;
-  me.innerHTML=`<span class="pill k-${mk}">${myNow?curS:pillTxt(tc)}</span>${html}<span class="go">보기 ›</span><span class="mstat">${offRun?`<span>이번 오프 <b>${offRun===1?'오늘까지':offRun+'일 남음'}</b></span>`:''}<span>${mm}월 남은 근무 <b>${rw}번</b> · 오프 <b>${ro}일</b></span></span>`;
+  me.innerHTML=`<span class="pill k-${mk}">${myNow?curS:pillTxt(tc)}</span>${html}<span class="go">보기 ›</span>`;
 }
 let shownM=0;
 function render(){
