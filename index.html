@@ -6,7 +6,7 @@
 <title>On Duty</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600&family=Jua&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* VOICE everyday work tool for one ward nurse, calm and quick to read between rounds
    IDEA the ward handover relay: night → day → evening → night, a baton passed down a line
@@ -14,7 +14,7 @@
    COLOUR white or deep night ground; shift colours amber D, coral E, indigo N, teal MD; team rose A, green B, sky C
    TYPE IBM Plex Sans KR for everything, weights carry hierarchy
    LAYOUT phone first: header, Sun–Sat month calendar, now, relay, coworkers, ward board, original photos; at 760px+ calendar beside relay */
-:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0e1117);--ink:light-dark(#15171d,#eef0f6);--mute:light-dark(#646a78,#9aa1b2);--line:light-dark(#e6e8ee,#262b37);--card:light-dark(#f5f6f9,#171b25);--d:#f2a01f;--e:#ee5a3a;--n:#4a50e0;--md:#0f9e8c;--ta:#e0577d;--tb:#3aa858;--tc:#169fe3;--off:light-dark(#9aa1ae,#5d6575)}
+:root{color-scheme:light dark;--bg:light-dark(#fff8f3,#1c1512);--top:light-dark(#ffeee3,#2a1d18);--surf:light-dark(#ffffff,#261c18);--ink:light-dark(#40261c,#f8eae2);--mute:light-dark(#8a6d61,#bfa293);--line:light-dark(#f6e1d6,#3b2c25);--card:light-dark(#fdeee5,#33251f);--sh:light-dark(rgba(220,120,80,.32),rgba(0,0,0,.5));--acc:#ff9a76;--d:#ffc94d;--e:#ff8273;--n:#8a83f0;--md:#45bfa2;--ta:#f0759a;--tb:#5cbf7d;--tc:#ff9a76;--off:light-dark(#c9aea2,#7d675e)}
 :root[data-theme=light]{color-scheme:light}
 :root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
@@ -29,9 +29,9 @@ button:focus-visible{outline:2px solid var(--tc);outline-offset:2px}
 .tog i{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .55s cubic-bezier(.5,1.6,.4,1)}
 .tog.on i{transform:translateX(18px)}
 .logo{font-family:"Fredoka","IBM Plex Sans KR",sans-serif;font-weight:600;font-size:24px;line-height:1;letter-spacing:-.01em}
-.cd{--c:var(--off);border:1.5px solid var(--c);background:color-mix(in srgb,var(--c) 12%,var(--bg));border-radius:12px;min-height:40px;padding:3px 12px;display:grid;justify-items:end;line-height:1.2;text-align:right}
-.cd .cl{font-size:11px;font-weight:600;color:var(--mute)}
-.cd b{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cdown{--c:var(--off);border:1.5px solid var(--c);background:color-mix(in srgb,var(--c) 12%,var(--bg));border-radius:12px;min-height:40px;padding:3px 12px;display:grid;justify-items:end;line-height:1.2;text-align:right}
+.cdown .cl{font-size:11px;font-weight:600;color:var(--mute)}
+.cdown b{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .cal{padding:10px 10px 8px}
 .calh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px}
 .calh h2{margin:0;font-size:17px;letter-spacing:-.02em}
@@ -125,13 +125,38 @@ main{grid-template-areas:"me" "now" "cal" "hero" "crew" "board" "pics"}
 .bob{animation:bob 4s ease-in-out infinite}
 .tw{animation:tw 3s ease-in-out infinite}
 @media(prefers-reduced-motion:reduce){.tog,.tog i{transition:none}.baton,.bob,.tw,.fade{animation:none}.baton{display:none}}
+
+/* 피치 크림 테마: 밝고 말랑한 표면, 둥근 제목 */
+body{background:linear-gradient(var(--top),var(--bg) 260px) no-repeat,var(--bg)}
+.top{background:color-mix(in srgb,var(--top) 88%,transparent);border-bottom:0}
+.panel,.hero{background:var(--surf);border:0;border-radius:22px;box-shadow:0 8px 20px -12px var(--sh)}
+.relay{background:var(--surf)}
+.panel h2,.calh h2,.ward .wh h2,.sky h1{font-family:"Jua","IBM Plex Sans KR",sans-serif;font-weight:400;letter-spacing:0}
+.logo{font-size:26px;color:var(--ink)}
+.sky h1{font-size:34px}
+.panel h2,.calh h2,.ward .wh h2{font-size:18px}
+.chip{border:0;border-radius:999px;background:var(--card)}
+.chip.big{border-radius:999px;background:var(--surf)}
+.chip.self{background:var(--ink);color:var(--bg)}
+.pill{border-radius:999px}
+.k-D{color:#4a3000}
+.day{border-radius:14px}
+.day[aria-pressed=true]{background:var(--acc);color:#fff}
+.mbtn{border:0;background:var(--card);border-radius:14px}
+.mebar{background:var(--acc);color:#fff;border-radius:22px;box-shadow:0 8px 18px -10px var(--sh)}
+.mebar>.k-OFF,.mebar>.k-WOFF{color:#fff;border-color:rgba(255,255,255,.85)}
+.cdown{border-radius:16px}
+.tab{border:0;border-radius:999px}
+.tab[aria-pressed=true]{background:var(--acc);color:#fff}
+.row.on{border-radius:14px;margin:0 -8px;padding:6px 8px}
+.shot{border:0;border-radius:16px}
 </style>
 </head>
 <body>
 <header class="top">
   <div class="bar">
     <div class="me"><span class="tog" id="tog" aria-hidden="true"><i></i></span><b class="logo">On Duty</b></div>
-    <button class="cd" id="goNow" type="button" hidden><span class="cl" id="cdL"></span><b id="cdT"></b></button>
+    <button class="cdown" id="goNow" type="button" hidden><span class="cl" id="cdL"></span><b id="cdT"></b></button>
   </div>
 </header>
 <main id="main">
