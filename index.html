@@ -14,7 +14,7 @@
    PICTURE a sky band for the selected shift (sun, sunset, moon) over a vertical relay: 받는 인계 → 나 → 주는 인계
    COLOUR white or deep night ground; shift colours amber D, coral E, indigo N, teal MD; team rose A, green B, sky C
    TYPE IBM Plex Sans KR for everything, weights carry hierarchy
-   LAYOUT phone first: header, Sun–Sat month calendar, now, relay, coworkers, ward board, original photos; at 760px+ calendar beside relay */
+   LAYOUT phone first: header, Sun–Sat month calendar, now, relay (all teams, my team first) with the rest of the ward folded in, original photos; at 760px+ calendar beside relay */
 :root{color-scheme:light;--bg:light-dark(#fff8f3,#1c1512);--top:light-dark(#ffeee3,#2a1d18);--surf:light-dark(#ffffff,#261c18);--ink:light-dark(#40261c,#f8eae2);--mute:light-dark(#8a6d61,#bfa293);--line:light-dark(#f6e1d6,#3b2c25);--card:light-dark(#fdeee5,#33251f);--sh:light-dark(rgba(220,120,80,.32),rgba(0,0,0,.5));--acc:#ff9a76;--d:#ffc94d;--e:#ff8273;--n:#8a83f0;--md:#45bfa2;--ta:#f0759a;--tb:#5cbf7d;--tc:#ff9a76;--off:light-dark(#c9aea2,#7d675e)}
 :root[data-theme=light]{color-scheme:light}
 :root[data-theme=dark]{color-scheme:light}
@@ -58,9 +58,9 @@ button:focus-visible{outline:2px solid var(--tc);outline-offset:2px}
 main{padding:10px max(12px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px));max-width:1080px;margin:0 auto;display:grid;gap:10px}
 #hero,#now,#mine{scroll-margin-top:84px}
 [hidden]{display:none!important}
-#mine{grid-area:me}#calbox{grid-area:cal;touch-action:pan-y}#now{grid-area:now}#hero{grid-area:hero}#crew{grid-area:crew}#board{grid-area:board}#pics{grid-area:pics}
-main{grid-template-areas:"me" "now" "cal" "hero" "crew" "board" "pics"}
-@media(min-width:760px){main{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"me me" "now hero" "cal hero" "crew board" "pics pics";align-items:start}}
+#mine{grid-area:me}#calbox{grid-area:cal;touch-action:pan-y}#now{grid-area:now}#hero{grid-area:hero}#pics{grid-area:pics}
+main{grid-template-areas:"me" "now" "cal" "hero" "pics"}
+@media(min-width:760px){main{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"me me" "now hero" "cal hero" "pics pics";align-items:start}}
 .hero{border-radius:18px;overflow:hidden;background:var(--card);border:1px solid var(--line)}
 .sky{position:relative;height:96px;padding:12px 16px;color:#fff;transition:background .5s}
 .sky.D{background:linear-gradient(160deg,#ffe29a,#ffb347 70%,#f59a23);color:#2b1a00}
@@ -90,6 +90,9 @@ main{grid-template-areas:"me" "now" "cal" "hero" "crew" "board" "pics"}
 .chip .cd{font-size:12px;color:var(--mute);font-weight:600}
 .others{margin-top:3px;font-size:13px;color:var(--mute)}
 .note{font-size:13px;color:var(--mute);margin-top:4px}
+.ext{padding:0 14px 10px}
+.ext .row:first-child{border-top:1px solid var(--line)}
+.ext .row.on{margin:0 -8px}
 .panel{border:1px solid var(--line);border-radius:16px;padding:10px 12px;background:var(--bg)}
 .panel h2{margin:0 0 4px;font-size:16px;letter-spacing:-.02em}
 .row{display:grid;grid-template-columns:56px minmax(0,1fr);gap:8px;padding:6px 0;border-top:1px solid var(--line);align-items:start}
@@ -108,6 +111,7 @@ main{grid-template-areas:"me" "now" "cal" "hero" "crew" "board" "pics"}
 .ward .wh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .ward .wh h2{margin:0}
 .ward .wh .tm{font-size:12px;color:var(--mute);margin-left:auto;white-space:nowrap}
+.lab .nowtag{margin:0 0 0 4px;vertical-align:1px}
 .nowtag{display:inline-block;margin-top:3px;font-size:11px;font-weight:700;color:#fff;background:var(--e);border-radius:5px;padding:0 5px;width:max-content}
 .next{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;padding:8px 12px;border-radius:14px;background:var(--bg);border:1px solid var(--line);width:100%;text-align:left;min-height:44px}
 .next b{font-size:16px}
@@ -174,8 +178,6 @@ body{background:linear-gradient(var(--top),var(--bg) 260px) no-repeat,var(--bg)}
     <div class="grid" id="cal"></div>
   </section>
   <section class="hero" id="hero"></section>
-  <section class="panel" id="crew"></section>
-  <section class="panel" id="board"></section>
   <section class="panel" id="pics">
     <h2>원본 근무표</h2>
     <div class="tabs"><button class="tab" type="button" data-p="11" aria-pressed="true">11월</button><button class="tab" type="button" data-p="12" aria-pressed="false">12월</button></div>
@@ -243,15 +245,24 @@ function skyArt(k){
     return o+`${s}<g class="bob"><circle cx="150" cy="46" r="24" fill="#f4f1ff"/><circle cx="161" cy="38" r="20" fill="#2b2f8f"/></g></svg>`}
   return o+`<g class="bob" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity=".3"><path d="M132 44 h16 l-16 20 h16"/><path d="M158 22 h12 l-12 15 h12"/></g><path d="M70 96 q40-22 80-4 q26 10 50 -2 V96Z" fill="currentColor" opacity=".08"/></svg>`;
 }
-function stopHtml(label,s,i,list,needTeam){
-  const c=`var(--${s.toLowerCase()})`;
+const nowTag=(i,s)=>i===nowI&&s===nowS?'<span class="nowtag">지금</span>':'';
+function stopHtml(label,s,i,list){
   if(list===null)return `<div class="lab"><b>${label}</b> · ${SN[s]}</div><div class="note">${i<0?'10월':'1월'} 근무표가 없어요</div>`;
-  const mine=list.filter(p=>p.t===MY),rest=list.filter(p=>p.t!==MY);
-  let h=`<div class="lab"><b>${label}</b> · ${short(i)} ${SN[s]}</div>`;
-  if(mine.length)h+=`<div class="who">${mine.map(p=>chip(p,true)).join('')}</div>`+(rest.length?`<div class="others">다른 팀 ${rest.map(p=>p.n).join(', ')}</div>`:'');
-  else if(rest.length)h+=`<div class="note">이날 C팀 ${SN[s]} 근무자가 없어요. 다른 팀에서 인계해요.</div><div class="who">${rest.map(p=>chip(p,true)).join('')}</div>`;
-  else h+=`<div class="note">${SN[s]} 근무자가 없어요</div>`;
+  let h=`<div class="lab"><b>${label}</b> · ${short(i)} ${SN[s]}${nowTag(i,s)}</div>`;
+  if(!list.length)return h+`<div class="note">${SN[s]} 근무자가 없어요</div>`;
+  const has=list.some(p=>p.t===MY);
+  h+=`<div class="who">${list.map(p=>chip(p,!has||p.t===MY)).join('')}</div>`;
+  if(!has)h+=`<div class="note">이날 ${MY}팀 ${SN[s]} 근무자가 없어서 다른 팀에서 인계해요</div>`;
   return h;
+}
+/* 인계 카드 아래 칸: 그날 나머지 근무, 미드, 기타 */
+function rowHtml(i,s,sub,hl){
+  const l=on(i,s);
+  return `<div class="row${hl?' on':''}" style="--c:var(--${s.toLowerCase()})"><div class="h"><b>${SN[s]}</b>${sub?`<span>${sub}</span>`:''}${nowTag(i,s)}</div><div class="who">${l.map(p=>chip(p)).join('')||'<span class="note">없음</span>'}</div></div>`;
+}
+function etcRow(i){
+  const etc=people.filter(p=>['ETC','LEAVE'].includes(cat(days[i].c[p.n]))).map(p=>({...p,code:days[i].c[p.n]}));
+  return etc.length?`<div class="row"><div class="h"><b>기타</b><span>인계 제외</span></div><div class="who">${etc.map(p=>chip(p)).join('')}</div></div>`:'';
 }
 function hero(){
   const code=days[sel].c[ME],k=cat(code);
@@ -264,40 +275,20 @@ function hero(){
     const to=k==='D'?[sel,'E']:k==='E'?[sel,'N']:[sel+1,'D'];
     const fl=on(from[0],from[1]),tl=on(to[0],to[1]);
     const cv=s=>`var(--${s.toLowerCase()})`;
+    const mates=on(sel,k).filter(p=>p.n!==ME);
     h+=`<div class="relay fade">
       <div class="stop" style="--c:${cv(from[1])};--c2:${cv(k)}"><div class="rail"><span class="line"></span><span class="baton"></span><span class="dot"></span></div><div class="body">${stopHtml('인계 받음',from[1],from[0],fl)}</div></div>
-      <div class="stop mine" style="--c:${cv(k)};--c2:${cv(to[1])}"><div class="rail"><span class="line"></span><span class="baton" style="animation-delay:1.2s"></span><span class="dot"></span></div><div class="body"><div class="lab"><b>나</b> · ${SN[k]} 근무</div><div class="who">${chip({n:ME,t:MY,code},true)}</div></div></div>
+      <div class="stop mine" style="--c:${cv(k)};--c2:${cv(to[1])}"><div class="rail"><span class="line"></span><span class="baton" style="animation-delay:1.2s"></span><span class="dot"></span></div><div class="body"><div class="lab"><b>나</b> · ${SN[k]} 근무${mates.length?` · 같이 ${mates.length}명`:''}${nowTag(sel,k)}</div><div class="who">${chip({n:ME,t:MY,code},true)}${mates.map(p=>chip(p,p.t===MY)).join('')}</div></div></div>
       <div class="stop" style="--c:${cv(to[1])}"><div class="rail"><span class="dot"></span></div><div class="body" style="padding-bottom:0">${stopHtml('인계 줌',to[1],to[0],tl)}</div></div>
-    </div>`;
+    </div>
+    <div class="ext">${k==='D'?rowHtml(sel,'N',HRS.N):k==='N'?rowHtml(sel,'D',HRS.D):''}${rowHtml(sel,'MD','인계 없음')}${etcRow(sel)}</div>`;
   }else{
     let j=sel+1;while(j<days.length&&!['D','E','N'].includes(cat(days[j].c[ME])))j++;
     h+=`<div class="relay fade"><div class="note" style="margin:0">오늘은 인계가 없어요.</div>`+
-      (j<days.length?`<button class="next" type="button" data-go="${j}"><span><span class="lab">다음 근무</span><br><b>${short(j)} ${SN[cat(days[j].c[ME])]}</b></span><span class="pill k-${cat(days[j].c[ME])}">${cat(days[j].c[ME])}</span></button>`:`<div class="note">12월 안에는 남은 근무가 없어요</div>`)+`</div>`;
+      (j<days.length?`<button class="next" type="button" data-go="${j}"><span><span class="lab">다음 근무</span><br><b>${short(j)} ${SN[cat(days[j].c[ME])]}</b></span><span class="pill k-${cat(days[j].c[ME])}">${cat(days[j].c[ME])}</span></button>`:`<div class="note">12월 안에는 남은 근무가 없어요</div>`)+`</div>`+
+      `<div class="ext">${['D','E','N','MD'].map(s=>rowHtml(sel,s,HRS[s])).join('')}${etcRow(sel)}</div>`;
   }
   $('hero').innerHTML=h;
-}
-function crew(){
-  const k=cat(days[sel].c[ME]);
-  const box=$('crew');box.hidden=!['D','E','N'].includes(k);if(box.hidden)return;
-  const md=on(sel,'MD');
-  let h=`<h2>같이 일하는 사람</h2>`;
-  if(['D','E','N'].includes(k)){
-    const mates=on(sel,k).filter(p=>p.n!==ME);
-    h+=`<div class="row" style="--c:var(--${k.toLowerCase()})"><div class="h"><b>${SN[k]}</b><span>같은 근무</span></div><div class="who">${mates.map(p=>chip(p)).join('')||'<span class="note">없음</span>'}</div></div>`;
-  }
-  h+=`<div class="row"><div class="h"><b>미드</b></div><div><div class="who">${md.map(p=>chip(p)).join('')||'<span class="note">이날 미드 없음</span>'}</div><div class="note">인수인계 없음</div></div></div>`;
-  $('crew').innerHTML=h;
-}
-function board(){
-  const k=cat(days[sel].c[ME]);
-  const etc=people.filter(p=>['ETC','LEAVE'].includes(cat(days[sel].c[p.n]))).map(p=>({...p,code:days[sel].c[p.n]}));
-  let h=`<h2>${days[sel].m}/${days[sel].d} 병동 근무</h2>`;
-  for(const s of ['D','E','N','MD']){
-    const l=on(sel,s);
-    h+=`<div class="row${s===k?' on':''}" style="--c:var(--${s.toLowerCase()})"><div class="h"><b>${SN[s]}</b>${HRS[s]?`<span>${HRS[s]}</span>`:''}${sel===nowI&&s===nowS?'<span class="nowtag">지금</span>':''}</div><div class="who">${l.map(p=>chip(p)).join('')||'<span class="note">없음</span>'}</div></div>`;
-  }
-  if(etc.length)h+=`<div class="row"><div class="h"><b>기타</b><span>인계 제외</span></div><div class="who">${etc.map(p=>chip(p)).join('')}</div></div>`;
-  $('board').innerHTML=h;
 }
 const START={D:7,E:15,N:23},END={D:15,E:23,N:7};
 let nowI=-1,nowS='';
@@ -352,11 +343,11 @@ let shownM=0,swiped=-1e9;
 function render(){
   if(days[sel].m!==viewM||!$('cal').children.length){viewM=days[sel].m;cal()}
   else $('cal').querySelectorAll('.day[data-i]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.i===sel));
-  hero();crew();board();
+  hero();
   if(shownM!==viewM){shownM=viewM;pics(viewM)}
 }
 nowBox();render();
-setInterval(()=>{nowBox();board()},30000);
+setInterval(()=>{const was=nowI+nowS;nowBox();if(nowI+nowS!==was)hero()},30000);
 $('cal').addEventListener('click',e=>{if(performance.now()-swiped<400)return;const b=e.target.closest('.day:not(.empty)');if(b){sel=+b.dataset.i;render()}});
 $('hero').addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b){sel=+b.dataset.go;render()}});
 const MONTHS=[...new Set(days.map(x=>x.m))];
