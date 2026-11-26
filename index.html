@@ -92,6 +92,13 @@ main{grid-template-areas:"me" "now" "cal" "hero" "pics"}
 .note{font-size:13px;color:var(--mute);margin-top:4px}
 .mg{display:inline-flex;flex-wrap:wrap;gap:4px;padding:3px;border:2px solid var(--tc);border-radius:21px;background:color-mix(in srgb,var(--tc) 9%,var(--surf));max-width:100%}
 .mg .chip{background:var(--surf)}.mg .chip.big{border:0}.mg .chip.self{background:var(--ink)}
+.rwrap{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start}
+.rwrap .relay{padding-right:8px}
+.mdcol{margin:12px 12px 10px 0;padding:8px 6px;border-radius:16px;background:color-mix(in srgb,var(--md) 13%,var(--surf));display:flex;flex-direction:column;align-items:center;gap:4px;min-width:76px}
+.mdcol .lab{font-size:12px}
+.mdcol .lab b{color:var(--md)}
+.mdcol .chip{height:28px;font-size:13px;padding:0 8px 0 6px;background:var(--surf)}
+.mdcol .note{font-size:11px;margin:0}
 .ext{padding:0 14px 10px}
 .ext .row:first-child{border-top:1px solid var(--line)}
 .ext .row.on{margin:0 -8px}
@@ -284,12 +291,14 @@ function hero(){
     const fl=on(from[0],from[1]),tl=on(to[0],to[1]);
     const cv=s=>`var(--${s.toLowerCase()})`;
     const mates=on(sel,k).filter(p=>p.n!==ME);
-    h+=`<div class="relay fade">
+    const md=on(sel,'MD');
+    h+=`<div class="rwrap"><div class="relay fade">
       <div class="stop" style="--c:${cv(from[1])};--c2:${cv(k)}"><div class="rail"><span class="line"></span><span class="baton"></span><span class="dot"></span></div><div class="body">${stopHtml('인계 받음',from[1],from[0],fl)}</div></div>
       <div class="stop mine" style="--c:${cv(k)};--c2:${cv(to[1])}"><div class="rail"><span class="line"></span><span class="baton" style="animation-delay:1.2s"></span><span class="dot"></span></div><div class="body"><div class="lab"><b>나</b>${mates.length?` · 같이 ${mates.length}명`:''}${nowTag(sel,k)}</div>${who(mates,true,chip({n:ME,t:MY,code},true))}</div></div>
       <div class="stop" style="--c:${cv(to[1])}"><div class="rail"><span class="dot"></span></div><div class="body" style="padding-bottom:0">${stopHtml('인계 줌',to[1],to[0],tl)}</div></div>
     </div>
-    <div class="ext">${k==='D'?rowHtml(sel,'N',HRS.N):k==='N'?rowHtml(sel,'D',HRS.D):''}${rowHtml(sel,'MD','인계 없음')}${etcRow(sel)}</div>`;
+    <aside class="mdcol" aria-label="이날 미드"><div class="lab"><b>미드</b></div>${md.map(p=>chip(p)).join('')||'<span class="note">없음</span>'}<span class="note">인계 없음</span></aside></div>
+    <div class="ext">${k==='D'?rowHtml(sel,'N',HRS.N):k==='N'?rowHtml(sel,'D',HRS.D):''}${etcRow(sel)}</div>`;
   }else{
     let j=sel+1;while(j<days.length&&!['D','E','N'].includes(cat(days[j].c[ME])))j++;
     h+=`<div class="relay fade">`+
@@ -297,10 +306,7 @@ function hero(){
       `<div class="ext">${['D','E','N','MD'].map(s=>rowHtml(sel,s,HRS[s])).join('')}${etcRow(sel)}</div>`;
   }
   $('hero').innerHTML=h;
-  syncNow();
 }
-/* 인계 카드에 지금 근무가 이미 보이면 '지금 병동' 칸은 숨긴다 */
-function syncNow(){$('now').hidden=nowI<0||!!$('hero').querySelector('.nowtag')}
 const START={D:7,E:15,N:23},END={D:15,E:23,N:7};
 let nowI=-1,nowS='';
 function nowBox(){
@@ -358,7 +364,7 @@ function render(){
   if(shownM!==viewM){shownM=viewM;pics(viewM)}
 }
 nowBox();render();
-setInterval(()=>{const was=nowI+nowS;nowBox();if(nowI+nowS!==was)hero();else syncNow()},30000);
+setInterval(()=>{const was=nowI+nowS;nowBox();if(nowI+nowS!==was)hero()},30000);
 $('cal').addEventListener('click',e=>{if(performance.now()-swiped<400)return;const b=e.target.closest('.day:not(.empty)');if(b){sel=+b.dataset.i;render()}});
 $('hero').addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b){sel=+b.dataset.go;render()}});
 const MONTHS=[...new Set(days.map(x=>x.m))];
