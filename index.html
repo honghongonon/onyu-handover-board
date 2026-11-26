@@ -90,6 +90,8 @@ main{grid-template-areas:"me" "now" "cal" "hero" "pics"}
 .chip .cd{font-size:12px;color:var(--mute);font-weight:600}
 .others{margin-top:3px;font-size:13px;color:var(--mute)}
 .note{font-size:13px;color:var(--mute);margin-top:4px}
+.mg{display:inline-flex;flex-wrap:wrap;gap:4px;padding:3px;border:2px solid var(--tc);border-radius:21px;background:color-mix(in srgb,var(--tc) 9%,var(--surf));max-width:100%}
+.mg .chip{background:var(--surf)}.mg .chip.big{border:0}.mg .chip.self{background:var(--ink)}
 .ext{padding:0 14px 10px}
 .ext .row:first-child{border-top:1px solid var(--line)}
 .ext .row.on{margin:0 -8px}
@@ -245,24 +247,30 @@ function skyArt(k){
     return o+`${s}<g class="bob"><circle cx="150" cy="46" r="24" fill="#f4f1ff"/><circle cx="161" cy="38" r="20" fill="#2b2f8f"/></g></svg>`}
   return o+`<g class="bob" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity=".3"><path d="M132 44 h16 l-16 20 h16"/><path d="M158 22 h12 l-12 15 h12"/></g><path d="M70 96 q40-22 80-4 q26 10 50 -2 V96Z" fill="currentColor" opacity=".08"/></svg>`;
 }
+/* 내 팀(C팀)은 맨 앞에 한 테두리로 묶고, 다른 팀은 뒤에 붙인다. lead는 묶음 맨 앞에 넣을 칩(나) */
+const who=(list,big,lead='')=>{
+  const m=list.filter(p=>p.t===MY),r=list.filter(p=>p.t!==MY);
+  if(!lead&&!list.length)return '<div class="who"><span class="note">없음</span></div>';
+  const g=lead||m.length?`<span class="mg">${lead}${m.map(p=>chip(p,big)).join('')}</span>`:'';
+  return `<div class="who">${g}${r.map(p=>chip(p,big&&!g)).join('')}</div>`;
+};
 const nowTag=(i,s)=>i===nowI&&s===nowS?'<span class="nowtag">지금</span>':'';
 function stopHtml(label,s,i,list){
   if(list===null)return `<div class="lab"><b>${label}</b> · ${SN[s]}</div><div class="note">${i<0?'10월':'1월'} 근무표가 없어요</div>`;
   let h=`<div class="lab"><b>${label}</b> · ${short(i)} ${SN[s]}${nowTag(i,s)}</div>`;
   if(!list.length)return h+`<div class="note">${SN[s]} 근무자가 없어요</div>`;
-  const has=list.some(p=>p.t===MY);
-  h+=`<div class="who">${list.map(p=>chip(p,!has||p.t===MY)).join('')}</div>`;
-  if(!has)h+=`<div class="note">이날 ${MY}팀 ${SN[s]} 근무자가 없어서 다른 팀에서 인계해요</div>`;
+  h+=who(list,true);
+  if(!list.some(p=>p.t===MY))h+=`<div class="note">이날 ${MY}팀 ${SN[s]} 근무자가 없어서 다른 팀에서 인계해요</div>`;
   return h;
 }
 /* 인계 카드 아래 칸: 그날 나머지 근무, 미드, 기타 */
 function rowHtml(i,s,sub,hl){
   const l=on(i,s);
-  return `<div class="row${hl?' on':''}" style="--c:var(--${s.toLowerCase()})"><div class="h"><b>${SN[s]}</b>${sub?`<span>${sub}</span>`:''}${nowTag(i,s)}</div><div class="who">${l.map(p=>chip(p)).join('')||'<span class="note">없음</span>'}</div></div>`;
+  return `<div class="row${hl?' on':''}" style="--c:var(--${s.toLowerCase()})"><div class="h"><b>${SN[s]}</b>${sub?`<span>${sub}</span>`:''}${nowTag(i,s)}</div>${who(l)}</div>`;
 }
 function etcRow(i){
   const etc=people.filter(p=>['ETC','LEAVE'].includes(cat(days[i].c[p.n]))).map(p=>({...p,code:days[i].c[p.n]}));
-  return etc.length?`<div class="row"><div class="h"><b>기타</b><span>인계 제외</span></div><div class="who">${etc.map(p=>chip(p)).join('')}</div></div>`:'';
+  return etc.length?`<div class="row"><div class="h"><b>기타</b><span>인계 제외</span></div>${who(etc)}</div>`:'';
 }
 function hero(){
   const code=days[sel].c[ME],k=cat(code);
@@ -278,18 +286,21 @@ function hero(){
     const mates=on(sel,k).filter(p=>p.n!==ME);
     h+=`<div class="relay fade">
       <div class="stop" style="--c:${cv(from[1])};--c2:${cv(k)}"><div class="rail"><span class="line"></span><span class="baton"></span><span class="dot"></span></div><div class="body">${stopHtml('인계 받음',from[1],from[0],fl)}</div></div>
-      <div class="stop mine" style="--c:${cv(k)};--c2:${cv(to[1])}"><div class="rail"><span class="line"></span><span class="baton" style="animation-delay:1.2s"></span><span class="dot"></span></div><div class="body"><div class="lab"><b>나</b> · ${SN[k]} 근무${mates.length?` · 같이 ${mates.length}명`:''}${nowTag(sel,k)}</div><div class="who">${chip({n:ME,t:MY,code},true)}${mates.map(p=>chip(p,p.t===MY)).join('')}</div></div></div>
+      <div class="stop mine" style="--c:${cv(k)};--c2:${cv(to[1])}"><div class="rail"><span class="line"></span><span class="baton" style="animation-delay:1.2s"></span><span class="dot"></span></div><div class="body"><div class="lab"><b>나</b>${mates.length?` · 같이 ${mates.length}명`:''}${nowTag(sel,k)}</div>${who(mates,true,chip({n:ME,t:MY,code},true))}</div></div>
       <div class="stop" style="--c:${cv(to[1])}"><div class="rail"><span class="dot"></span></div><div class="body" style="padding-bottom:0">${stopHtml('인계 줌',to[1],to[0],tl)}</div></div>
     </div>
     <div class="ext">${k==='D'?rowHtml(sel,'N',HRS.N):k==='N'?rowHtml(sel,'D',HRS.D):''}${rowHtml(sel,'MD','인계 없음')}${etcRow(sel)}</div>`;
   }else{
     let j=sel+1;while(j<days.length&&!['D','E','N'].includes(cat(days[j].c[ME])))j++;
-    h+=`<div class="relay fade"><div class="note" style="margin:0">오늘은 인계가 없어요.</div>`+
-      (j<days.length?`<button class="next" type="button" data-go="${j}"><span><span class="lab">다음 근무</span><br><b>${short(j)} ${SN[cat(days[j].c[ME])]}</b></span><span class="pill k-${cat(days[j].c[ME])}">${cat(days[j].c[ME])}</span></button>`:`<div class="note">12월 안에는 남은 근무가 없어요</div>`)+`</div>`+
+    h+=`<div class="relay fade">`+
+      (j<days.length?`<button class="next" style="margin-top:0" type="button" data-go="${j}"><span><span class="lab">다음 근무</span><br><b>${short(j)} ${SN[cat(days[j].c[ME])]}</b></span><span class="pill k-${cat(days[j].c[ME])}">${cat(days[j].c[ME])}</span></button>`:`<div class="note">12월 안에는 남은 근무가 없어요</div>`)+`</div>`+
       `<div class="ext">${['D','E','N','MD'].map(s=>rowHtml(sel,s,HRS[s])).join('')}${etcRow(sel)}</div>`;
   }
   $('hero').innerHTML=h;
+  syncNow();
 }
+/* 인계 카드에 지금 근무가 이미 보이면 '지금 병동' 칸은 숨긴다 */
+function syncNow(){$('now').hidden=nowI<0||!!$('hero').querySelector('.nowtag')}
 const START={D:7,E:15,N:23},END={D:15,E:23,N:7};
 let nowI=-1,nowS='';
 function nowBox(){
@@ -304,7 +315,7 @@ function nowBox(){
   if(i>=0){
     box.hidden=false;
     const l=on(i,s);
-    box.innerHTML=`<div class="wh"><h2>지금 병동</h2><span class="pill k-${s}">${s}</span><b>${SN[s]}</b><span class="tm">${HRS[s]}</span></div><div class="who">${l.map(p=>chip(p)).join('')}</div>`;
+    box.innerHTML=`<div class="wh"><h2>지금 병동</h2><span class="pill k-${s}">${s}</span><b>${SN[s]}</b><span class="tm">${HRS[s]}</span></div>${who(l)}`;
   }else box.hidden=true;
   /* 나 */
   me.hidden=false;
@@ -330,7 +341,7 @@ function nowBox(){
   if(myNow){html=`<span class="st"><span>나 · 지금</span><b>${SN[curS]} 근무 중 · ${END[curS]}시까지</b></span>`;go=cur}
   else{
     const today=W.includes(tk)?`오늘 ${SN[tk]}`:tk==='WOFF'?'오늘 원티드 오프':tk==='OFF'?'오늘 오프':`오늘 ${pillTxt(tc)}`;
-    const nx=nxt<0?'12월 안에 남은 근무 없음':`다음 근무 ${nxt===ti?'오늘':short(nxt)} <span class="pill ip k-${cat(days[nxt].c[ME])}">${cat(days[nxt].c[ME])}</span>`;
+    const nx=nxt<0?'12월 안에 남은 근무 없음':nxt===ti?`${HRS[tk]} 근무 예정`:`다음 근무 ${short(nxt)} <span class="pill ip k-${cat(days[nxt].c[ME])}">${cat(days[nxt].c[ME])}</span>`;
     html=`<span class="st"><span>나 · ${today}${W.includes(tk)&&nxt!==ti?' (끝남)':''}</span><b>${nx}</b></span>`;go=nxt<0?ti:nxt;
   }
   me.dataset.go=go;
@@ -347,7 +358,7 @@ function render(){
   if(shownM!==viewM){shownM=viewM;pics(viewM)}
 }
 nowBox();render();
-setInterval(()=>{const was=nowI+nowS;nowBox();if(nowI+nowS!==was)hero()},30000);
+setInterval(()=>{const was=nowI+nowS;nowBox();if(nowI+nowS!==was)hero();else syncNow()},30000);
 $('cal').addEventListener('click',e=>{if(performance.now()-swiped<400)return;const b=e.target.closest('.day:not(.empty)');if(b){sel=+b.dataset.i;render()}});
 $('hero').addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b){sel=+b.dataset.go;render()}});
 const MONTHS=[...new Set(days.map(x=>x.m))];
