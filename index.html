@@ -298,7 +298,7 @@ function hero(){
       <div class="stop" style="--c:${cv(to[1])}"><div class="rail"><span class="dot"></span></div><div class="body" style="padding-bottom:0">${stopHtml('인계 줌',to[1],to[0],tl)}</div></div>
     </div>
     <aside class="mdcol" aria-label="이날 미드"><div class="lab"><b>미드</b></div>${md.map(p=>chip(p)).join('')||'<span class="note">없음</span>'}<span class="note">인계 없음</span></aside></div>
-    <div class="ext">${k==='D'?rowHtml(sel,'N',HRS.N):k==='N'?rowHtml(sel,'D',HRS.D):''}${etcRow(sel)}</div>`;
+    ${etcRow(sel)?`<div class="ext">${etcRow(sel)}</div>`:''}`;
   }else{
     let j=sel+1;while(j<days.length&&!['D','E','N'].includes(cat(days[j].c[ME])))j++;
     h+=`<div class="relay fade">`+
